@@ -55,9 +55,9 @@ def yield_chunks(input_file, interval):
         yield frame_rate, np.fromstring(chunk, dtype=np.int16)
 
 def dominant(frame_rate, chunk):
-    w = np.fft.fft(chunk)
-    freqs = np.fft.fftfreq(len(chunk))
-    peak_coeff = np.argmax(np.abs(w))
+    w = np.fft.fft(chunk)   //푸리에 트랜스폼
+    freqs = np.fft.fftfreq(len(chunk)) //이산적으로 만듦
+    peak_coeff = np.argmax(np.abs(w)) //푸리에 트랜스폼 된 상태에서 가장 큰 값의 index
     peak_freq = freqs[peak_coeff]
     return abs(peak_freq * frame_rate) # in Hz
 
