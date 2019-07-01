@@ -110,11 +110,24 @@ public class ConvertedHTML {
     private void setImageData(Element lineOfBody)
     {
         String filename = lineOfBody.attr("src");
-        String extension = filename.substring(filename.lastIndexOf(".")+1);
+        String extension = "";
+        if(filename.contains("data:image"))
+        {
+            extension = filename.substring(filename.indexOf("/")+1, filename.indexOf(";"));
 
-        appendImageInHead(extension);
-        appendImageInBody();
-        setBase64EncodingData(filename);
+            appendImageInHead(extension);
+            appendImageInBody();
+            setBase64EncodingData(filename,true);
+        }
+        else
+        {
+            extension = filename.substring(filename.lastIndexOf(".")+1);
+
+            appendImageInHead(extension);
+            appendImageInBody();
+            setBase64EncodingData(filename,false);
+        }
+
     }
     private void appendImageInHead(String extension)
     {
@@ -301,14 +314,20 @@ public class ConvertedHTML {
         binary_img.insert(0, "<BINDATASTORAGE>");
         binary_img.append("</BINDATASTORAGE>");
     }
-    private void setBase64EncodingData(String url)
+    private void setBase64EncodingData(String src, boolean isEncoded)
     {
-        ByteArrayOutputStream byteOutputStream = getBinaryImageData(url);
-        byte[] fileArray = byteOutputStream.toByteArray();
-        String encoded_str = new String(Base64.encodeBase64(fileArray));
-
+        String encoded_str = "";
+        if(isEncoded)
+        {
+            encoded_str = src.substring(src.indexOf(",")+1);
+        }
+        else
+        {
+            ByteArrayOutputStream byteOutputStream = getBinaryImageData(src);
+            byte[] fileArray = byteOutputStream.toByteArray();
+            encoded_str = new String(Base64.encodeBase64(fileArray));
+        }
         binary_img.append("<BINDATA Encoding=\"Base64\" Id=\""+(img_count)+"\" Size=\"10113\">"+encoded_str+"</BINDATA>");
-
     }
     private ByteArrayOutputStream getBinaryImageData(String url)
     {
