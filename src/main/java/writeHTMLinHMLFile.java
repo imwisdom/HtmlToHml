@@ -1,38 +1,48 @@
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 
-public class HTMLtoHML {
+public class writeHTMLinHMLFile {
 
-    private String htmlFile = null;
-    private String hwpmlFile = null;
+    private String htmlUrl;
+    private String hwpmlUrl;
 
-    public HTMLtoHML(String htmlFile, String hwpmlFile)
+    private Borderfill borderfill;
+    private CharShape charShape;
+    private Image image;
+
+    private ConvertHTMLtoHML convertHTMLtoHML;
+
+    public writeHTMLinHMLFile(String htmlUrl, String hwpmlUrl)
     {
-        this.htmlFile = htmlFile;
-        this.hwpmlFile = hwpmlFile;
+        this.htmlUrl = htmlUrl;
+        this.hwpmlUrl = hwpmlUrl;
+
+        this.borderfill = new Borderfill();
+        this.charShape = new CharShape();
+        this.image = new Image();
+
+        this.convertHTMLtoHML = new ConvertHTMLtoHML(this.htmlUrl, this.borderfill, this.charShape, this.image);
     }
-    public void toHwpml()
+    public void write()
     {
-        ConvertedHTML convertedHTML = new ConvertedHTML(this.htmlFile);
-
-        StringBuffer buffer = getBufferinHwpml();
+        StringBuffer html = convertHTMLtoHML.convert();
+        StringBuffer bufferInHWPML = getBufferinHwpml();
         //insert
-        insertInBody(buffer, convertedHTML);
-        insertInHead(buffer, convertedHTML);
-
+        insertInBody(bufferInHWPML, html);
+        insertInHead(bufferInHWPML);
 
         //delete needless string
-        int endofHWPML = buffer.indexOf("</HWPML>");
-        buffer.replace(endofHWPML+8, buffer.length(), "");
+        int endofHWPML = bufferInHWPML.indexOf("</HWPML>");
+        bufferInHWPML.replace(endofHWPML+8, bufferInHWPML.length(), "");
 
-        writeConvertedHtml(buffer);
-
+        writeConvertedHtml(bufferInHWPML);
     }
     private StringBuffer getBufferinHwpml()
     {
         //add contexts of buffer to hwpml file
-        File file = new File(hwpmlFile);
+        File file = new File(hwpmlUrl);
         BufferedReader br = null;
         char[] ch = new char[(int)file.length()];
         StringBuffer buffer = new StringBuffer();
@@ -53,57 +63,58 @@ public class HTMLtoHML {
 
         return buffer;
     }
-    private void insertInBody(StringBuffer buffer, ConvertedHTML convertedHTML)
+    private void insertInBody(StringBuffer buffer, StringBuffer htmlBuffer)
     {
-        StringBuffer htmlBuffer = convertedHTML.getConvertedHTML();
         int endofSection = buffer.indexOf("</SECTION>");
         buffer.insert(endofSection, htmlBuffer);
 
-        if(convertedHTML.table()>=2)
-            buffer.replace(buffer.indexOf(" Table=\""), buffer.indexOf("/>"), " Table=\""+convertedHTML.table()+"\"");
+        int tableCount = StringUtils.countMatches(borderfill.toString(), "</TABLE>");
+
+        if(tableCount>=2)
+            buffer.replace(buffer.indexOf(" Table=\""), buffer.indexOf("/>"), " Table=\""+tableCount+"\"");
     }
-    private void insertInHead(StringBuffer buffer, ConvertedHTML convertedHTML)
+    private void insertInHead(StringBuffer buffer)
     {
-        insertInTableHead(buffer, convertedHTML);
-        insertInImageHead(buffer, convertedHTML);
-        insertInStringHead(buffer, convertedHTML);
+        insertInTableHead(buffer);
+        insertInImageHead(buffer);
+        insertInStringHead(buffer);
     }
-    private void insertInTableHead(StringBuffer buffer, ConvertedHTML convertedHTML)
+    private void insertInTableHead(StringBuffer buffer)
     {
-        StringBuffer borderfillBuf = convertedHTML.getBorderfillBuf();
+        StringBuffer borderfillBuf = borderfill.getBorderfill();
         if(borderfillBuf!=null)
         {
             buffer.insert(buffer.indexOf("</BORDERFILLLIST>"), borderfillBuf);
-            int borderCount = StringUtils.countMatches(buffer, "</BORDERFILL>");
+            int borderCount = borderfill.borderfillCount();
 
             buffer.replace(buffer.indexOf("<BORDERFILLLIST"), buffer.indexOf("<BORDERFILL BackSlash"), "<BORDERFILLLIST Count=\""+borderCount+"\">");
         }
     }
-    private void insertInImageHead(StringBuffer buffer, ConvertedHTML convertedHTML)
+    private void insertInImageHead(StringBuffer buffer)
     {
-        StringBuffer binListBuf = convertedHTML.getImgHeader();
+        StringBuffer binListBuf = image.header();
         if(binListBuf !=null)
         {
             buffer.insert(buffer.indexOf("<FACENAMELIST>"), binListBuf);
 
-            StringBuffer binDataBuf = convertedHTML.getBinaryImage();
+            StringBuffer binDataBuf = image.tail();
             buffer.insert(buffer.indexOf("<SCRIPTCODE"), binDataBuf);
         }
     }
-    private void insertInStringHead(StringBuffer buffer, ConvertedHTML convertedHTML)
+    private void insertInStringHead(StringBuffer buffer)
     {
-        StringBuffer charShapeBuf = convertedHTML.getCharShapeBuf();
+        StringBuffer charShapeBuf = charShape.getCharShape();
         if(charShapeBuf != null)
         {
             buffer.insert(buffer.indexOf("</CHARSHAPELIST>"), charShapeBuf);
-            int charshapeCount = StringUtils.countMatches(buffer, "</CHARSHAPE>");
+            int charshapeCount = charShape.count();
 
             buffer.replace(buffer.indexOf("</BORDERFILLLIST>")+17, buffer.indexOf("<CHARSHAPE "), "<CHARSHAPELIST Count=\""+charshapeCount+"\">");
         }
     }
     private void writeConvertedHtml(StringBuffer buffer)
     {
-        File file = new File(hwpmlFile);
+        File file = new File(hwpmlUrl);
         //rewrite in hml file
         FileWriter writer = null;
 

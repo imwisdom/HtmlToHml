@@ -1,4 +1,3 @@
-import java.io.File;
 
 public class Main {
 
@@ -8,10 +7,7 @@ public class Main {
      */
     public static void main(String args[]){
 
-        HTMLtoHML htmLtoHML = new HTMLtoHML(args[0], args[1]);
-        htmLtoHML.toHwpml();
-
-//        ConvertedHTML convertedHTML = new ConvertedHTML("./test.html");
-//        convertedHTML.getConvertedHTML();
+        writeHTMLinHMLFile writeHTMLinHMLFile = new writeHTMLinHMLFile(args[0], args[1]);
+        writeHTMLinHMLFile.write();
     }
 }

@@ -19,6 +19,13 @@ public class ConvertedHTMLTest {
         assertEquals(a.attr("style"), "");
     }
     @Test
+    public void testChildnum()
+    {
+        Element a = getHtmlBody();
+
+        System.out.println(a.children().size());
+    }
+    @Test
     public void colorTest(){
 
         Element a = getHtmlBody();
@@ -32,6 +39,11 @@ public class ConvertedHTMLTest {
         assertEquals(a, "this is : 4294967295");
     }
     @Test
+    public void testTextTag(){
+        Element a = getHtmlBody();
+        System.out.println(a.select("p").first());
+    }
+    @Test
     public void testFontSize(){
         Element a = getHtmlBody();
         System.out.println(a.select("p").attr("style"));
@@ -43,6 +55,16 @@ public class ConvertedHTMLTest {
         double fontSize = Double.parseDouble(style_str.substring(start_fontsize+10, end_fontsize));
 
         assertEquals(fontSize, 16, 0);
+    }
+    @Test
+    public void testColCount()
+    {
+        Element a = getHtmlBody();
+        Elements tr = a.select("tr");
+        System.out.println(tr);
+        System.out.println("-----");
+        System.out.println(tr.get(0).children().size());
+        System.out.println(tr.get(3).children().size());
 
     }
     private String loadHtmlFile()
