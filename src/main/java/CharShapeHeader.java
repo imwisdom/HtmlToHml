@@ -1,5 +1,8 @@
 public interface CharShapeHeader {
 
-    int id(boolean isBold);
-    int id(double fontsize, boolean isBold);
+    void setCharShape(boolean isBold);
+    void setCharShape(double fontsize, boolean isBold);
+    int count();
+    int id();
+    StringBuffer getCharShape();
 }

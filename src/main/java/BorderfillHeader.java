@@ -1,6 +1,8 @@
 public interface BorderfillHeader {
 
+    void setBorderfill(long valueOfColor);
     int id();
-    int id(long valueOfColor);
+    int count();
+    StringBuffer getBorderfill();
 
 }
