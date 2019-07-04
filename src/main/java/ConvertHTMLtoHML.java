@@ -2,6 +2,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 
+import java.awt.*;
+
+import static java.lang.Integer.parseUnsignedInt;
+
 public class ConvertHTMLtoHML implements Converter{
 
     private HTML html;
@@ -188,11 +192,15 @@ public class ConvertHTMLtoHML implements Converter{
             int color_start = style_str.indexOf("#");
             hexOfColor = style_str.substring(color_start+1);
 
-            hexOfColor = new StringBuffer(hexOfColor).reverse().toString();
+//            hexOfColor = new StringBuffer(hexOfColor).reverse().toString();
+//
+            long valueOfColor = parseUnsignedInt( hexOfColor, 16 );
 
-            long valueOfColor = Integer.parseInt( hexOfColor, 16 );
+            int r = parseUnsignedInt(hexOfColor.substring(0, 2), 16);
+            int g = parseUnsignedInt(hexOfColor.substring(2, 4), 16);
+            int b = parseUnsignedInt(hexOfColor.substring(4, 6), 16);
 
-            return borderfill.id(valueOfColor);
+            return borderfill.id(b*256*256 + g*256 + r);
         }
     }
     private String string_convert(Element htmlElement)

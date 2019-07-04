@@ -4,8 +4,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 import org.junit.Test;
+
+import java.awt.*;
 import java.io.*;
 
+import static java.lang.Integer.parseUnsignedInt;
 import static org.junit.Assert.*;
 
 public class ConvertedHTMLTest {
@@ -66,6 +69,17 @@ public class ConvertedHTMLTest {
         System.out.println(tr.get(0).children().size());
         System.out.println(tr.get(3).children().size());
 
+    }
+    @Test
+    public void testColor()
+    {
+        String hexOfColor = "FF0000";
+
+        int r = parseUnsignedInt(hexOfColor.substring(0, 2), 16);
+        int g = parseUnsignedInt(hexOfColor.substring(2, 4), 16);
+        int b = parseUnsignedInt(hexOfColor.substring(4, 6), 16);
+
+        System.out.println(b*256*256 + g*256+r);
     }
     private String loadHtmlFile()
     {
