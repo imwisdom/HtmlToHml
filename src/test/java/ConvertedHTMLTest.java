@@ -81,9 +81,17 @@ public class ConvertedHTMLTest {
 
         System.out.println(b*256*256 + g*256+r);
     }
+
+    @Test
+    public void test()
+    {
+        Element a = getHtmlBody();
+        Element aaa = a.nextElementSibling();
+
+    }
     private String loadHtmlFile()
     {
-        File file = new File("./test.html");
+        File file = new File("./gk2a_ami_le2_amv_cd14_weeklyreport_201905_3.html");
         char[] ch = new char[(int)file.length()];
         StringBuffer htmlInBuffer = new StringBuffer();
 

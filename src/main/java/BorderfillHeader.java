@@ -1,6 +1,8 @@
+import org.jsoup.nodes.Element;
+
 public interface BorderfillHeader {
 
-    void setBorderfill(long valueOfColor);
+    void setBorderfill(Element anElement);
     int id();
     int count();
     StringBuffer getBorderfill();

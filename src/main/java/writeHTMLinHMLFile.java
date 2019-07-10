@@ -1,8 +1,4 @@
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +14,8 @@ public class writeHTMLinHMLFile {
 
   private ConvertHTMLtoHML convertHTMLtoHML;
 
+  private EmptyHML emptyHML;
+
   public writeHTMLinHMLFile(String htmlUrl, String hwpmlUrl) {
     this.htmlUrl = htmlUrl;
     this.hwpmlUrl = hwpmlUrl;
@@ -28,11 +26,14 @@ public class writeHTMLinHMLFile {
 
     this.convertHTMLtoHML = new ConvertHTMLtoHML(this.htmlUrl, this.borderfill, this.charShape,
         this.image);
+
+    this.emptyHML = new EmptyHML(this.hwpmlUrl);
   }
 
   public void write() {
-    StringBuffer html = convertHTMLtoHML.convert();
-    StringBuffer bufferInHWPML = getBufferinHwpml();
+    convertHTMLtoHML.convert();
+    StringBuffer html = convertHTMLtoHML.getHmlBuffer();
+    StringBuffer bufferInHWPML = emptyHML.getBufferinHwpml();
     //insert
     insertInBody(bufferInHWPML, html);
     insertInHead(bufferInHWPML);
@@ -42,30 +43,6 @@ public class writeHTMLinHMLFile {
     bufferInHWPML.replace(endofHWPML + 8, bufferInHWPML.length(), "");
 
     writeConvertedHtml(bufferInHWPML);
-  }
-
-  private StringBuffer getBufferinHwpml() {
-    //add contexts of buffer to hwpml file
-    File file = new File(hwpmlUrl);
-    BufferedReader br = null;
-    char[] ch = new char[(int) file.length()];
-    StringBuffer buffer = new StringBuffer();
-
-    try {
-      br = new BufferedReader(new FileReader(file));
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }
-    try {
-      br.read(ch);
-      buffer.append(ch);
-
-      br.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    return buffer;
   }
 
   private void insertInBody(StringBuffer buffer, StringBuffer htmlBuffer) {
@@ -140,14 +117,6 @@ public class writeHTMLinHMLFile {
       } catch (IOException e) {
         e.printStackTrace();
       }
-    }
-  }
-
-  private void renameFile(String filename, String newFilename) {
-    File file = new File(filename);
-    File fileNew = new File(newFilename);
-    if (file.exists()) {
-      file.renameTo(fileNew);
     }
   }
 }

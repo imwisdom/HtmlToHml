@@ -11,12 +11,12 @@ public class Image {
   private StringBuffer header;
   private StringBuffer tail;
 
-
   public Image() {
     this.count = 0;
     this.header = new StringBuffer();
     this.tail = new StringBuffer();
   }
+
   public void appendImageInfo(String src) {
     String extension = "";
     if (src.contains("data:image")) {
@@ -98,9 +98,11 @@ public class Image {
   public StringBuffer header() {
     return header;
   }
+
   public StringBuffer tail() {
     return tail;
   }
+
   public int count() {
     return count;
   }

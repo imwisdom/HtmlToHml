@@ -1,32 +1,46 @@
-public class Borderfill implements BorderfillHeader{
+import org.jsoup.nodes.Element;
+
+public class Borderfill implements BorderfillHeader {
 
   private StringBuffer borderfill;
   private int id;
   private int count;
 
   public Borderfill() {
-    this.borderfill = new StringBuffer(
-        "<BORDERFILL BackSlash=\"0\" BreakCellSeparateLine=\"0\" CenterLine=\"0\" CounterBackSlash=\"0\" CounterSlash=\"0\" CrookedSlash=\"0\" Id=\"3\" Shadow=\"false\" Slash=\"0\" ThreeD=\"false\"><LEFTBORDER Type=\"Solid\" Width=\"0.12mm\"/><RIGHTBORDER Type=\"Solid\" Width=\"0.12mm\"/><TOPBORDER Type=\"Solid\" Width=\"0.12mm\"/><BOTTOMBORDER Type=\"Solid\" Width=\"0.12mm\"/><DIAGONAL Type=\"Solid\" Width=\"0.1mm\"/><FILLBRUSH><WINDOWBRUSH Alpha=\"0\" FaceColor=\"4294967295\" HatchColor=\"4278190080\"/></FILLBRUSH></BORDERFILL>");
+    this.borderfill = new StringBuffer(AttachHMLTag.BorderFill(3, 4294967295L));
     this.id = 3;
+    this.count = 3;
   }
 
   @Override
-  public void setBorderfill(long valueOfColor) {
-    ++id; ++count;
-    borderfill.append(
-        "<BORDERFILL BackSlash=\"0\" BreakCellSeparateLine=\"0\" CenterLine=\"0\" CounterBackSlash=\"0\" CounterSlash=\"0\" CrookedSlash=\"0\" Id=\""
-            + id
-            + "\" Shadow=\"false\" Slash=\"0\" ThreeD=\"false\"><LEFTBORDER Type=\"Solid\" Width=\"0.12mm\"/><RIGHTBORDER Type=\"Solid\" Width=\"0.12mm\"/><TOPBORDER Type=\"Solid\" Width=\"0.12mm\"/><BOTTOMBORDER Type=\"Solid\" Width=\"0.12mm\"/><DIAGONAL Type=\"Solid\" Width=\"0.1mm\"/><FILLBRUSH><WINDOWBRUSH Alpha=\"0\" FaceColor=\""
-            + valueOfColor + "\" HatchColor=\"4278190080\"/></FILLBRUSH></BORDERFILL>");
+  public void setBorderfill(Element anElement) {
+    if (anElement == null) {
+      id = 3;
+      return;
+    }
+
+    long colorValue = StyleOfHML.colorValue(anElement);
+    if (colorValue > 0) {
+      ++count;
+      id = count;
+      borderfill.append(AttachHMLTag.BorderFill(id, colorValue));
+    } else {
+      setBorderfill(anElement.parent());
+    }
+
   }
+
   @Override
   public int id() {
     return id;
   }
 
+  @Override
   public StringBuffer getBorderfill() {
     return borderfill;
   }
+
+  @Override
   public int count() {
     return count;
   }

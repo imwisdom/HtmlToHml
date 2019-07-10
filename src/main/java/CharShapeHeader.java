@@ -1,7 +1,8 @@
+import org.jsoup.nodes.Element;
+
 public interface CharShapeHeader {
 
-    void setCharShape(boolean isBold);
-    void setCharShape(double fontsize, boolean isBold);
+    void setCharShape(Element anElement);
     int count();
     int id();
     StringBuffer getCharShape();
