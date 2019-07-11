@@ -18,7 +18,7 @@ public class HMLNode {
     this.child = child;
   }
 
-  public void setSibling(HMLNode sibling) {
+  public void setNewSibling(HMLNode sibling) {
     if (this.sibling == null) {
       this.sibling = sibling;
     } else {
@@ -29,18 +29,18 @@ public class HMLNode {
       aNode.sibling = sibling;
     }
   }
+  public void setNextSibling(HMLNode sibling){
+    this.sibling = sibling;
+  }
+
 
   public void addChild(HMLNode child) {
     if (this.child == null) {
       this.child = child;
     } else {
       HMLNode aNode = this.child;
-      while (aNode.sibling != null) {
-        aNode = aNode.sibling;
-      }
-      aNode.setSibling(child);
+      aNode.setNewSibling(child);
     }
-
   }
 
   public void setHeadFirst(String head) {
@@ -69,13 +69,6 @@ public class HMLNode {
 
   public HMLNode getChild() {
     return this.child;
-  }
-  public HMLNode getLastChild(){
-    HMLNode child = this.child;
-    if(child==null) return null;
-    for(child = this.child;child.getSibling()!=null;child=child.getSibling());
-    return child;
-
   }
 
 }

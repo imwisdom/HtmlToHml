@@ -43,10 +43,8 @@ public class CharShape implements CharShapeHeader {
       fontsize = 7.55;
       isBold = true;
     } else {
-      if (tag.equals("b") || anElement.attr("style").contains("font-weight")) {
-        isBold = true;
-      }
       fontsize = StyleOfHML.fontSize(anElement);
+      isBold = StyleOfHML.bold(anElement);
     }
 
     if (fontsize == 1000 && !isBold) {

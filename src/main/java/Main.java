@@ -6,7 +6,7 @@ public class Main {
    */
   public static void main(String[] args) {
 
-    writeHTMLinHMLFile writeHTMLinHMLFile = new writeHTMLinHMLFile(args[0], args[1]);
-    writeHTMLinHMLFile.write();
+    HmlGenerator hmlGenerator = new HmlGenerator(args[0], args[1]);
+    hmlGenerator.generate();
   }
 }

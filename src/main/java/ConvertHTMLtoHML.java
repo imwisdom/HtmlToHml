@@ -1,5 +1,6 @@
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 public class ConvertHTMLtoHML {
@@ -29,19 +30,21 @@ public class ConvertHTMLtoHML {
     Node child = body.childNode(0);
     convertRecursively(child);
 
-    image.putBindataInList();
-    image.putBindataInStorage();
   }
 
   private void convertRecursively(Node htmlNode) {
-    if(htmlNode == null) return;
-
+    if (htmlNode == null) {
+      return;
+    }
     HMLNode aNode = convert(htmlNode);
-    if (aNode!=EMPTY_NODE){
+    if (aNode != EMPTY_NODE) {
+      if (htmlNode instanceof TextNode) {
+        aNode = AttachHMLTag.Text(0, aNode);
+      }
       if (!findTag(aNode, "P")) {
         aNode = AttachHMLTag.P(16, aNode);
       }
-      hmlNode.setSibling(aNode);
+      hmlNode.setNewSibling(aNode);
     }
     convertRecursively(htmlNode.nextSibling());
   }
@@ -57,8 +60,9 @@ public class ConvertHTMLtoHML {
     }
     hmlBuffer.append(hmlNode.getHead());
 
-    if(hmlNode.getChild()!=null)
+    if (hmlNode.getChild() != null) {
       getHmlBufferRecursively(hmlNode.getChild());
+    }
 
     hmlBuffer.append(hmlNode.getFoot());
     getHmlBufferRecursively(hmlNode.getSibling());
@@ -70,7 +74,6 @@ public class ConvertHTMLtoHML {
     boolean isNull = (htmlNode == null);
     boolean isTrim = (htmlNode.toString().trim().equals("") ||
         htmlNode.toString().trim().equals("\n"));
-
     if (isNull || isTrim) {
       return EMPTY_NODE;
     }
@@ -79,12 +82,23 @@ public class ConvertHTMLtoHML {
       Element htmlElement = (Element) htmlNode;
       String tag = htmlElement.tagName();
 
-      if (tag.equals("img") || tag.equals("image")) {
-        return img_convert(htmlElement);
-      } else if (tag.equals("table")) {
-        return table_convert(htmlElement);
-      } else {
-        return string_convert(htmlElement);
+      switch (tag) {
+        case "img":
+        case "image":
+          return convertImage(htmlElement);
+        case "table":
+          return convertTable(htmlElement);
+        case "br":
+          if (htmlElement.parent().children().size() != 1) {
+            return AttachHMLTag.P(16, AttachHMLTag.Text(0, EMPTY_NODE));
+          } else {
+            return AttachHMLTag.Text(0, EMPTY_NODE);
+          }
+        case "ul":
+        case "ol":
+          return list_convert(htmlElement);
+        default:
+          return string_convert(htmlElement);
       }
     } else {
       HMLNode stringNode = new HMLNode(); //just stringNode. no need head, foot, child, sibling...
@@ -93,7 +107,7 @@ public class ConvertHTMLtoHML {
     }
   }
 
-  private HMLNode img_convert(Element htmlElement) {
+  private HMLNode convertImage(Element htmlElement) {
     HMLNode aNode = new HMLNode();
     String src = htmlElement.attr("src");
     double width = 40000;
@@ -107,33 +121,32 @@ public class ConvertHTMLtoHML {
 
     image.appendImageInfo(src);
     aNode = AttachHMLTag.ImageBody(image.count(), width, height, aNode);
-
     return aNode;
   }
 
-  private HMLNode table_convert(Element htmlElement) {
+  private HMLNode convertTable(Element htmlElement) {
     //row count and column count
     Elements tr = htmlElement.select("tr");
-
     int rowCount = tr.size();
     int colCount = getColCount(tr);
     String tableHeader = AttachHMLTag.TableHeader(colCount, rowCount);
+    HMLNode converted = convertCell(tr, rowCount, tableHeader);
+    converted.setFoot("</TABLE></TEXT>");
+    return AttachHMLTag.P(16, converted);
+  }
 
+  private HMLNode convertCell(Elements tr, int rowCount, String tableHeader) {
     HMLNode converted = new HMLNode();
     converted.setHeadFirst(tableHeader);
-
     int rowaddr = 0;
     int coladdr = 0;
-
     HMLNode trNode = new HMLNode();
     while (rowaddr < rowCount) {
       if (coladdr == 0) {
         trNode.setHeadLast("<ROW>");
       }
-
       Element tr_pointer = tr.get(rowaddr);
       int numberOfCell = tr_pointer.children().size();  //in tr
-
       HMLNode cellNode = getCellWithInfoTag(tr_pointer, coladdr, rowaddr);
       trNode.addChild(cellNode);
       coladdr++;
@@ -145,8 +158,7 @@ public class ConvertHTMLtoHML {
         trNode = new HMLNode();
       }
     }
-    converted.setFoot("</TABLE></TEXT>");
-    return AttachHMLTag.P(16, converted);
+    return converted;
   }
 
   private HMLNode getCellWithInfoTag(Element tr_pointer, int coladdr, int rowaddr) {
@@ -183,11 +195,13 @@ public class ConvertHTMLtoHML {
 
       while (cell_child != null) {
         HMLNode aNode = convert(cell_child);
-        if(aNode!=EMPTY_NODE){
-          if(!findTag(aNode, "TEXT"))
+        if (aNode != EMPTY_NODE) {
+          if (!findTag(aNode, "TEXT")) {
             aNode = AttachHMLTag.Text(0, aNode);
-          if(!findTag(aNode, "P"))
+          }
+          if (!findTag(aNode, "P")) {
             aNode = AttachHMLTag.P(3, aNode);
+          }
           cellContent.addChild(aNode);
         }
         cell_child = cell_child.nextSibling();
@@ -212,100 +226,150 @@ public class ConvertHTMLtoHML {
   }
 
   int listIndex = 1;
+
   private HMLNode string_convert(Element htmlElement) {
     String tag = htmlElement.tagName();
-    if (tag.equals("br")) {
-      if(htmlElement.parent().children().size()!=1)
-        return AttachHMLTag.P(16, AttachHMLTag.Text(0, EMPTY_NODE));
-      else
-        return AttachHMLTag.Text(0, EMPTY_NODE);
-    } else if (tag.equals("ul") || tag.equals("ol")) {
-      return listString_convert(htmlElement);
-    }
     charShape.setCharShape(htmlElement);
     int charShapeId = charShape.id();
-    HMLNode strNode = new HMLNode();
+    HMLNode returnNode = new HMLNode();
 
-    if(tag.equals("li")){
-      String headString = "<TAB/>";
+    if (tag.equals("li")) {
+      String symbolOfList = "<TAB/>";
       if (htmlElement.parent().tagName().equals("ol")) {
-        headString = headString + listIndex + " ";
+        symbolOfList = symbolOfList + listIndex + " ";
         listIndex++;
-      } else
-        headString = headString + "- ";
+      } else {
+        symbolOfList = symbolOfList + "- ";
+      }
 
-      HMLNode tabNode = new HMLNode(headString, "", null);
+      HMLNode tabNode = new HMLNode(symbolOfList, "", null);
       tabNode = AttachHMLTag.Text(0, tabNode);
-      strNode.addChild(tabNode);
+      returnNode.addChild(tabNode);
     }
 
     if (htmlElement.childNodeSize() > 0) {
-      Node child = htmlElement.childNode(0);
-      while (child != null) {
-        HMLNode aNode = convert(child);
+      Node childOfHtml = htmlElement.childNode(0);
+      while (childOfHtml != null) {
+        HMLNode insertNode = convert(childOfHtml);
 
-        if (aNode != EMPTY_NODE){
-          if (!aNode.getHead().equals("") && aNode.getFoot().equals("")) {
-            aNode = AttachHMLTag.Text(charShapeId, aNode);
+        if (insertNode != EMPTY_NODE) {
+          if (!insertNode.getHead().equals("") && insertNode.getFoot().equals("")) {
+            insertNode = AttachHMLTag.Text(charShapeId, insertNode);
           }
 
-          Node nextChild = child.nextSibling();
-          if(nextChild instanceof Element)
-          {
-            if(nextChild.nextSibling()!=null && nextChild.toString().equals("\n")){
-              nextChild = nextChild.nextSibling();
-            }
-            String nextChildTag = ((Element) nextChild).tagName();
-            if(!aNode.getFoot().contains("</P>") && (
-                nextChildTag.equals("br") || nextChildTag.equals("p")
-                    || nextChildTag.equals("ol") || nextChildTag.equals("ul"))){
-              aNode = AttachHMLTag.P(3, aNode);
-            }
+          if (childOfHtml.nextSibling() != null) {
+            testNextTagForPTag(childOfHtml, insertNode, returnNode);
+          } else {
+            returnNode.addChild(insertNode);
           }
-          strNode.addChild(aNode);
         }
-        child = child.nextSibling();
+        childOfHtml = childOfHtml.nextSibling();
       }
     }
-    if((tag.equals("p") || tag.indexOf("h")==0) && !findTag(strNode, "P"))
-      return AttachHMLTag.P(3, strNode);
-    else
-      return strNode;
+    if ((tag.equals("p") || tag.equals("div") || tag.indexOf("h") == 0) && !findTag(returnNode,
+        "P")) {
+      return AttachHMLTag.P(3, returnNode);
+    }
+    attachPTagtoAllSiblings(returnNode.getChild());
+
+    return returnNode;
   }
-//  private HMLNode attachPTag(HMLNode hmlNode)
-//  {
-//    HMLNode aNode = hmlNode;
-//
-//
-//  }
-  private boolean findTag(HMLNode hmlNode, String tag)
-  {
-    if(hmlNode==null)
+
+  private void testNextTagForPTag(Node htmlNode, HMLNode insertNode, HMLNode parentNode) {
+    Node nextHtmlNode = htmlNode.nextSibling();
+    if (nextHtmlNode instanceof Element) {
+      if (nextHtmlNode.nextSibling() != null && nextHtmlNode.toString().equals("\n")) {
+        nextHtmlNode = nextHtmlNode.nextSibling();
+      }
+      String nextHtmlTag = ((Element) nextHtmlNode).tagName();
+      if (!insertNode.getFoot().contains("</P>") && (nextHtmlTag.equals("p")
+          || nextHtmlTag.equals("div") || nextHtmlTag.equals("ol") || nextHtmlTag.equals("ul"))) {
+        insertNode = AttachHMLTag.P(3, insertNode);
+      } else if (!insertNode.getFoot().contains("</P>") && nextHtmlTag.equals("br")) {
+
+        HMLNode newNode = parentNode.getChild();
+        if (newNode != null) {
+          newNode.setNewSibling(insertNode);
+          parentNode = new HMLNode();
+          attachPTagtoAllSiblings(newNode);
+          insertNode = newNode;
+        } else {
+          insertNode = AttachHMLTag.P(3, insertNode);
+        }
+
+      }
+    }
+    parentNode.addChild(insertNode);
+  }
+
+  private void attachPTagtoAllSiblings(HMLNode hmlNode) {
+    if (!findTag(hmlNode, "P")) {
+      return;
+    }
+    HMLNode aNode = hmlNode;
+
+    for (; findTag(aNode.getSibling(), "P"); aNode = aNode.getSibling()) {
+      ;
+    }
+
+    if (aNode.getSibling() == null) {
+      return;
+    }
+
+    HMLNode noPTag = aNode.getSibling();
+    aNode.setNextSibling(null);
+
+    HMLNode noPTagFoot = noPTag;
+    while (noPTagFoot != null && !findTag((noPTagFoot = noPTagFoot.getSibling()), "P")) {
+      ;
+    }
+
+    if (noPTagFoot == null) {
+      noPTag = AttachHMLTag.P(3, noPTag);
+      aNode.setNextSibling(noPTag);
+    } else {
+      HMLNode yPTag = noPTagFoot.getSibling();
+      noPTagFoot.setNextSibling(null);
+
+      noPTag = AttachHMLTag.P(3, noPTag);
+
+      noPTag.setNextSibling(yPTag);
+      aNode.setNextSibling(noPTag);
+
+      attachPTagtoAllSiblings(noPTag);
+    }
+  }
+
+  private boolean findTag(HMLNode hmlNode, String tag) {
+    if (hmlNode == null) {
       return false;
+    }
 
-    if(hmlNode.getFoot().contains("</"+tag+">"))
+    if (hmlNode.getFoot().contains("</" + tag + ">")) {
       return true;
+    }
 
-    if(hmlNode.getFoot().equals("") && hmlNode.getHead().equals(""))
+    if (hmlNode.getFoot().equals("") && hmlNode.getHead().equals("")) {
       return findTag(hmlNode.getSibling(), tag) || findTag(hmlNode.getChild(), tag);
+    }
     return findTag(hmlNode.getChild(), tag);
   }
 
-  private HMLNode listString_convert(Element htmlElement) {
+  private HMLNode list_convert(Element htmlElement) {
     HMLNode listNode = new HMLNode();
-    Node child = htmlElement.childNode(0);
+    Node child = htmlElement.childNode(0);  //<li>
 
     while (child != null) {
-      if (child.childNodeSize()>0)
-      {
+      if (child.childNodeSize() > 0) {
         HMLNode childNode = convert(child);
-        if(!findTag(childNode, "P"))
+        if (!findTag(childNode, "P")) {
           childNode = AttachHMLTag.P(3, childNode);
+        }
         listNode.addChild(childNode);
       }
       child = child.nextSibling();
     }
-    listIndex = 0;
+    listIndex = 1;
     return listNode;
   }
 }

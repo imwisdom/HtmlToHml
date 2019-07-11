@@ -3,7 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 
-public class writeHTMLinHMLFile {
+public class HmlGenerator {
 
   private String htmlUrl;
   private String hwpmlUrl;
@@ -16,7 +16,7 @@ public class writeHTMLinHMLFile {
 
   private EmptyHML emptyHML;
 
-  public writeHTMLinHMLFile(String htmlUrl, String hwpmlUrl) {
+  public HmlGenerator(String htmlUrl, String hwpmlUrl) {
     this.htmlUrl = htmlUrl;
     this.hwpmlUrl = hwpmlUrl;
 
@@ -30,10 +30,12 @@ public class writeHTMLinHMLFile {
     this.emptyHML = new EmptyHML(this.hwpmlUrl);
   }
 
-  public void write() {
+  public void generate() {
     convertHTMLtoHML.convert();
     StringBuffer html = convertHTMLtoHML.getHmlBuffer();
     StringBuffer bufferInHWPML = emptyHML.getBufferinHwpml();
+    image.putBindataInList();
+    image.putBindataInStorage();
     //insert
     insertInBody(bufferInHWPML, html);
     insertInHead(bufferInHWPML);
@@ -42,7 +44,7 @@ public class writeHTMLinHMLFile {
     int endofHWPML = bufferInHWPML.indexOf("</HWPML>");
     bufferInHWPML.replace(endofHWPML + 8, bufferInHWPML.length(), "");
 
-    writeConvertedHtml(bufferInHWPML);
+    write(bufferInHWPML);
   }
 
   private void insertInBody(StringBuffer buffer, StringBuffer htmlBuffer) {
@@ -95,7 +97,7 @@ public class writeHTMLinHMLFile {
     }
   }
 
-  private void writeConvertedHtml(StringBuffer buffer) {
+  private void write(StringBuffer buffer) {
     File file = new File(hwpmlUrl);
     //rewrite in hml file
     FileWriter writer = null;

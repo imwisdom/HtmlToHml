@@ -85,8 +85,6 @@ public class ConvertedHTMLTest {
     @Test
     public void test()
     {
-        Element a = getHtmlBody();
-        Element aaa = a.nextElementSibling();
 
     }
     private String loadHtmlFile()

@@ -28,12 +28,20 @@ public class StyleOfHML {
   }
 
   static double fontSize(Element anElement) {
+
+    if(anElement == null)
+      return 10.0;
     String style_str = anElement.attr("style");
     double fontSize = INITIAL_FONTSIZE;
-    if (anElement.parent() != null && anElement.parent().tagName().equals("font")) {
-      fontSize = Integer.parseInt(anElement.parent().attr("size")) * 4; //*4
 
-    } else if (!style_str.equals("")) {
+//    if (anElement.parent() != null && ((Element)anElement.parent()).tagName().equals("font")) {
+//      fontSize = Integer.parseInt(anElement.parent().attr("size")) * 4; //*4
+//
+//    }
+    if (anElement.tagName().equals("font")){
+      fontSize = Integer.parseInt(anElement.attr("size")) * 4; //*4
+    }
+    else if (!style_str.equals("")) {
       if (style_str.contains("font-size")) {
 
         int start_fontsize = style_str.indexOf("font-size:");
@@ -48,6 +56,18 @@ public class StyleOfHML {
         fontSize = Double.parseDouble(style_str.substring(start_fontsize + 10, end_fontsize));
       }
     }
+    if(fontSize==10.0)
+      return fontSize(anElement.parent());
     return fontSize;
+  }
+  static boolean bold(Element anElement){
+    if(anElement==null)
+      return false;
+    String tag = anElement.tagName();
+    if (tag.equals("b") || anElement.attr("style").contains("font-weight")) {
+      return true;
+    }
+    else
+      return bold(anElement.parent());
   }
 }
